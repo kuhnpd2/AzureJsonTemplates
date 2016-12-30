@@ -8,22 +8,10 @@
     "nicName": {
       "type": "string"
     },
-    "subnet0Name": {
+    "subnetName": {
       "type": "string"
     },
-    "subnet0StartAddress": {
-      "type": "string"
-    },
-    "subnet1Name": {
-      "type": "string"
-    },
-    "subnet1StartAddress": {
-      "type": "string"
-    },
-    "subnet2Name": {
-      "type": "string"
-    },
-    "subnet2StartAddress": {
+    "subnetStartAddress": {
       "type": "string"
     },
     "virtualNetworkName": {
@@ -31,23 +19,15 @@
     },
     "virtualNetworkExistingRGName": {
       "type": "string"
-    },
-    "publicIPAddressName": {
-      "type": "string"
-    },
-    "PublicIPRGName": {
-      "type": "string"
     }
   },
   "variables": {
       "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
-      "subnet0Ref": "[concat(variables('vnetID'),'/subnets/',parameters('subnet0Name'))]",
-      "subnet1Ref": "[concat(variables('vnetID'),'/subnets/',parameters('subnet1Name'))]",
-      "subnet2Ref": "[concat(variables('vnetID'),'/subnets/',parameters('subnet2Name'))]"
+      "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
   },
   "resources": [
     {
-      "name": "[concat(parameters('nicName'), '0')]",
+      "name": "[concat(parameters('nicName'), '1')]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[parameters('location')]",
       "apiVersion": "2015-06-15",
@@ -57,57 +37,14 @@
             "name": "ipconfig-mgmt",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddressName'))]"
-              },
               "subnet": {
-                "id": "[variables('subnet0Ref')]"
+                "id": "[variables('subnetRef')]"
               }
             }
           }
         ]
       }
-    },
-    {
-      "name": "[concat(parameters('nicName'), '1')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
-      "apiVersion": "2015-06-15",
-      "properties": {
-      "enableIPForwarding": true,
-        "ipConfigurations": [
-          {
-            "name": "ipconfig-untrust",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "subnet": {
-                "id": "[variables('subnet1Ref')]"
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "[concat(parameters('nicName'), '2')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
-      "apiVersion": "2015-06-15",
-      "properties": {
-        "enableIPForwarding": true,
-        "ipConfigurations": [
-          {
-            "name": "ipconfig-trust",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "subnet": {
-                "id": "[variables('subnet2Ref')]"
-              }
-            }
-          }
-        ]
-      }
-    }
+    }    
   ],
   "outputs": {}
 }
