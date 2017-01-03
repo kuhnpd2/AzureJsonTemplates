@@ -1,267 +1,310 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "osDiskVhdUri": {
-      "type": "string",
-      "metadata": {
-        "description": "Uri of the existing VHD"
-      }
-    },
-    "osType": {
-      "type": "string",
-      "allowedValues": [
-        "Windows",
-        "Linux"
-      ],
-      "metadata": {
-        "description": "Type of OS on the existing vhd"
-      }
-    },
-    "vmSize": {
-      "type": "string",
-      "allowedValues": [
-        "Standard_D3",
-        "Standard_D4",
-        "Standard_D3_v2",
-        "Standard_D4_v2",
-        "Standard_A4"
-      ],
-      "metadata": {
-        "description": "Azure VM size for VM-Series"
-      },
-      "defaultValue": "Standard_D3_v2"
-    },
-    "vmName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of the VM"
-      }
-    },
-    "virtualNetworkName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of the Virtual Network (VNET)"
-      },
-      "defaultValue": "AZ-EA-VN-001"
-    },
-    "vnetNewOrExisting": {
-      "type": "string",
-      "defaultValue": "existing",
-      "allowedValues": [
-        "new",
-        "existing"
-      ],
-      "metadata": {
-        "description": "Use new or existing VNET"
-      }
-    },
-    "virtualNetworkAddressPrefix": {
-      "type": "string",
-      "defaultValue": "10.35.0.0/19",
-      "metadata": {
-        "description": "Virtual network address CIDR"
-      }
-    },
-    "virtualNetworkExistingRGName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of resource group of existing VNET (if applicable)"
-      }
-    },
-    "subnetName": {
-      "type": "string",
-      "defaultValue": "AZ-EA-SN-DEV_TEST-VN-001-10.35.7.024",
-      "metadata": {
-        "description": "Subnet for Management"
-      }
-    },
-	"subnetPrefix": {
-      "type": "string",
-      "defaultValue": "10.35.7.0/24",
-      "metadata": {
-        "description": "subnet CIDR"
-      }
-    },
-	"adminUsername": {
-      "type": "string",
-	  "defaultValue": "customAdmin",
-      "metadata": {
-        "description": "Username of the administrator account of VM-Series"
-      }
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "defaultValue": "#Passw0rd123",
-      "metadata": {
-        "description": "Password for the administrator account of VM-Series"
-      }
-    },
-    "storageAccountName": {
-      "type": "string",
-	  "defaultValue": "azeasastdlrs003",
-      "metadata": {
-        "description": "Name prefix of the new storage account created to store the VM's disks"
-      }
-    },
-    "storageAccountNewOrExisting": {
-      "type": "string",
-      "defaultValue": "existing",
-      "allowedValues": [
-        "new",
-        "existing"
-      ],
-      "metadata": {
-        "Description": "Storage Account is new or existing"
-      }
-    },
-    "storageAccountExistingRG": {
-      "type": "string",
-      "defaultValue": "AZ-EA-RG-SVC-001",
-      "metadata": {
-        "description": "Storage's Resource Group for existing VM."
-      }
-    },
-    "storageAccountType": {
-      "type": "string",
-      "allowedValues": [
-        "Standard_LRS",
-        "Standard_GRS",
-        "Standard_RAGRS"
-      ],
-      "metadata": {
-        "description": "Type of the storage account created"
-      },
-      "defaultValue": "Standard_LRS"
-    },
-    "baseUrl": {
-      "type": "string",
-      "metadata": {
-        "artifactsBaseUrl": "",
-        "description": "URL to acquire other VM-Series for Azure templates"
-      },
-      "defaultValue": "https://raw.githubusercontent.com/barrytj/AzureJsonTemplates/Custom-VM"
-    }
-  },
-  "variables": {
-    "diagStorageAccountName": "[concat(uniquestring(resourceGroup().id), 'azeaiibdevvm')]",
-    "api-version": "2015-06-15",
-    "addressPrefix": "10.0.0.0/16",
-    "subnetName": "Subnet",
-    "subnetPrefix": "10.0.0.0/24",
-    "publicIPAddressName": "specializedVMPublicIP",
-    "publicIPAddressType": "Dynamic",
-    "virtualNetworkName": "specializedVMVNET",
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
-    "nicName": "AZ-EA-Nic",
-    "storageAccountSetupURL": "[concat(parameters('baseUrl'),'/storageAccount-',parameters('storageAccountNewOrExisting'),'.json')]"
-  },
-  "resources": [
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('diagStorageAccountName')]",
-      "apiVersion": "2016-01-01",
-      "location": "[resourceGroup().location]",
-      "sku": {
-        "name": "Standard_GRS"
-      },
-      "kind": "Storage",
-      "properties": {}
-    },
-    {
-      "apiVersion": "[variables('api-version')]",
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "[variables('virtualNetworkName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('addressPrefix')]"
-          ]
-        },
-        "subnets": [
-          {
-            "name": "[variables('subnetName')]",
-            "properties": {
-              "addressPrefix": "[variables('subnetPrefix')]"
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "String",
+            "metadata": {
+                "description": "The region to deploy the resources into"
             }
-          }
-        ]
-      }
-    },
-    {
-      "apiVersion": "[variables('api-version')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "name": "[variables('nicName')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
-      ],
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
-              },
-              "subnet": {
-                "id": "[variables('subnetRef')]"
-              }
+        },
+        "osDiskVhdUri": {
+            "type": "String",
+            "metadata": {
+                "description": "Uri of the existing VHD"
             }
-          }
-        ]
-      }
-    },
-    {
-      "apiVersion": "[variables('api-version')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIPAddressName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "[variables('publicIPAddressType')]"
-      }
-    },
-    {
-      "apiVersion": "[variables('api-version')]",
-      "type": "Microsoft.Compute/virtualMachines",
-      "name": "[parameters('vmName')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
-      ],
-      "properties": {
-        "hardwareProfile": {
-          "vmSize": "[parameters('vmSize')]"
         },
-        "storageProfile": {
-          "osDisk": {
-            "name": "[concat(parameters('vmName'),'-osDisk')]",
-            "osType": "[parameters('osType')]",
-            "caching": "ReadWrite",
-            "vhd": {
-              "uri": "[parameters('osDiskVhdUri')]"
-            },
-            "createOption": "Attach"
-          }
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+        "osType": {
+            "allowedValues": [
+                "Windows",
+                "Linux"
+            ],
+            "type": "String",
+            "metadata": {
+                "description": "Type of OS on the existing vhd"
             }
-          ]
         },
-        "diagnosticsProfile": {
-          "bootDiagnostics": {
-            "enabled": "true",
-            "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('diagStorageAccountName')), '2016-01-01').primaryEndpoints.blob)]"
-          }
+        "vmSize": {
+            "defaultValue": "Standard_D3_v2",
+            "allowedValues": [
+                "Standard_D3",
+                "Standard_D4",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_A4"
+            ],
+            "type": "String",
+            "metadata": {
+                "description": "Azure VM size for VM-Series"
+            }
+        },
+        "vmName": {
+            "type": "String",
+            "metadata": {
+                "description": "Name of the VM"
+            }
+        },
+        "virtualNetworkName": {
+            "defaultValue": "AZ-EA-VN-001",
+            "type": "String",
+            "metadata": {
+                "description": "Name of the Virtual Network (VNET)"
+            }
+        },
+        "vnetNewOrExisting": {
+            "defaultValue": "existing",
+            "allowedValues": [
+                "new",
+                "existing"
+            ],
+            "type": "String",
+            "metadata": {
+                "description": "Use new or existing VNET"
+            }
+        },
+        "virtualNetworkAddressPrefix": {
+            "defaultValue": "10.35.0.0/19",
+            "type": "String",
+            "metadata": {
+                "description": "Virtual network address CIDR"
+            }
+        },
+        "virtualNetworkExistingRGName": {
+            "type": "String",
+            "metadata": {
+                "description": "Name of resource group of existing VNET (if applicable)"
+            }
+        },
+        "subnetName": {
+            "defaultValue": "AZ-EA-SN-DEV_TEST-VN-001-10.35.7.024",
+            "type": "String",
+            "metadata": {
+                "description": "Subnet for Management"
+            }
+        },
+        "subnetPrefix": {
+            "defaultValue": "10.35.7.0/24",
+            "type": "String",
+            "metadata": {
+                "description": "subnet CIDR"
+            }
+        },
+        "nicNewOrExisting": {
+            "defaultValue": "existing",
+            "allowedValues": [
+                "new",
+                "existing"
+            ],
+            "type": "String",
+            "metadata": {
+                "description": "Use new or existing NIC"
+            }
+        },
+        "adminUsername": {
+            "defaultValue": "customAdmin",
+            "type": "String",
+            "metadata": {
+                "description": "Username of the administrator account of VM-Series"
+            }
+        },
+        "adminPassword": {
+            "defaultValue": "#Passw0rd123",
+            "type": "SecureString",
+            "metadata": {
+                "description": "Password for the administrator account of VM-Series"
+            }
+        },
+        "storageAccountName": {
+            "defaultValue": "azeasastdlrs003",
+            "type": "String",
+            "metadata": {
+                "description": "Name prefix of the new storage account created to store the VM's disks"
+            }
+        },
+        "storageAccountNewOrExisting": {
+            "defaultValue": "existing",
+            "allowedValues": [
+                "new",
+                "existing"
+            ],
+            "type": "String",
+            "metadata": {
+                "Description": "Storage Account is new or existing"
+            }
+        },
+        "storageAccountExistingRG": {
+            "defaultValue": "az-ea-rg-svc-001",
+            "type": "String",
+            "metadata": {
+                "description": "Storage's Resource Group for existing VM."
+            }
+        },
+        "storageAccountType": {
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS",
+                "Standard_GRS",
+                "Standard_RAGRS"
+            ],
+            "type": "String",
+            "metadata": {
+                "description": "Type of the storage account created"
+            }
+        },
+        "baseUrl": {
+            "defaultValue": "https://raw.githubusercontent.com/barrytj/AzureJsonTemplates/Custom-VM",
+            "type": "String",
+            "metadata": {
+                "artifactsBaseUrl": "",
+                "description": "URL to acquire other VM-Series for Azure templates"
+            }
         }
-      }
-    }
-  ]
+    },
+    "variables": {
+        "diagStorageAccountName": "[concat(uniquestring(resourceGroup().id), 'azeaiibdevvm')]",
+        "api-version": "2015-06-15",
+        "addressPrefix": "10.0.0.0/16",
+        "subnetName": "Subnet",
+        "subnetPrefix": "10.0.0.0/24",
+        "publicIPAddressName": "specializedVMPublicIP",
+        "publicIPAddressType": "Dynamic",
+        "virtualNetworkName": "AZ-EA-VN-001",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+        "nicName": "[concat('AZ-EA-NIC-',parameters('vmName'),'-00')]",
+        "storageAccountSetupURL": "[concat(parameters('baseUrl'),'/storageAccount-',parameters('storageAccountNewOrExisting'),'.json')]",
+        "vnetSetupURL": "[concat(parameters('baseUrl'),'/vnet-', parameters('vnetNewOrExisting'),'.json')]",
+        "setupNICsURL": "[concat(parameters('baseUrl'),'/setupNICS-', parameters('nicNewOrExisting'),'.json')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "SettingUpStorageAccount",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('storageAccountSetupURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[parameters('location')]"
+                    },
+                    "storageAccountType": {
+                        "value": "[parameters('storageAccountType')]"
+                    },
+                    "storageAccountName": {
+                        "value": "[parameters('storageAccountName')]"
+                    },
+                    "storageAccountExistingRG": {
+                        "value": "[parameters('storageAccountExistingRG')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "SettingUpVirtualNetwork",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vnetSetupURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[parameters('location')]"
+                    },
+                    "virtualNetworkName": {
+                        "value": "[parameters('virtualNetworkName')]"
+                    },
+                    "virtualNetworkAddressPrefix": {
+                        "value": "[parameters('virtualNetworkAddressPrefix')]"
+                    },
+                    "virtualNetworkExistingRGName": {
+                        "value": "[parameters('virtualNetworkExistingRGName')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "SetupNetworkInterfaces",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('setupNICsURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[parameters('location')]"
+                    },
+                    "nicName": {
+                        "value": "[variables('nicName')]"
+                    },
+                    "subnetName": {
+                        "value": "[parameters('subnetName')]"
+                    },
+                    "virtualNetworkName": {
+                        "value": "[parameters('virtualNetworkName')]"
+                    },
+                    "virtualNetworkExistingRGName": {
+                        "value": "[parameters('virtualNetworkExistingRGName')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "Microsoft.Resources/deployments/SettingUpVirtualNetwork"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('vmName')]",
+            "apiVersion": "[variables('api-version')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "name": "[concat(parameters('vmName'),'-osDisk')]",
+                        "osType": "[parameters('osType')]",
+                        "caching": "ReadWrite",
+                        "vhd": {
+                            "uri": "[parameters('osDiskVhdUri')]"
+                        },
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": "true",
+                        "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('diagStorageAccountName')), '2016-01-01').primaryEndpoints.blob)]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "Microsoft.Resources/deployments/SettingUpStorageAccount",
+                "Microsoft.Resources/deployments/SettingUpVirtualNetwork",
+                "Microsoft.Resources/deployments/SetupNetworkInterfaces"
+            ]
+        }
+    ]
 }
