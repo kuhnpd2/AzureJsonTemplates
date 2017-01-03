@@ -11,6 +11,9 @@
     "virtualNetworkAddressPrefix": {
       "type": "string"
     },
+    "subnets": {
+      "type": "array"
+    },
     "virtualNetworkExistingRGName": {
       "type": "string"
     }
