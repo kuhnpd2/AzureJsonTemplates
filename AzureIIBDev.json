@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "ImageUri": {
-            "defaultValue": "https://upmcisdcustomimages.blob.core.windows.net/isd-sis-dev/IIB-Dev-edited.vhd",
+            "defaultValue": "https://azeasastdlrs018.blob.core.windows.net/devcustomimages/isd-eti-sis/IIB-Dev-edited.vhd",
             "type": "string",
             "metadata": {
                 "description": "Uri of the existing Image"
@@ -86,7 +86,7 @@
         "fullVmName":"[concat('AZ-EA-IIB-DEV',parameters('vmNumber'))]",
         "vnetID": "[resourceId(parameters('virtualNetworkResourceGroupName'),concat('Microsoft.Network','/','virtualNetworks'),parameters('virtualNetworkName'))]",
         "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
-        "nicName": "[concat(variables('fullVmName'),'NIC-01')]"
+        "nicName": "[concat(variables('fullVmName'),'-NIC-01')]"
     },
     "resources": [
         {
@@ -131,7 +131,7 @@
                             "uri": "[parameters('ImageUri')]"
                         },
                         "vhd": {
-                            "uri": "[concat('https://upmcisdcustomimages.blob.core.windows.net/azure-dev-osdisks/', variables('fullVmName'), '-osdisk.vhd')]"
+                            "uri": "[concat('https://azeasastdlrs018.blob.core.windows.net/azure-dev-osdisks/', variables('fullVmName'), '-osdisk.vhd')]"
                         },
                         "createOption": "FromImage"
                     }
