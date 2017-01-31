@@ -10,6 +10,7 @@
             }
         },
         "osType": {
+            "defaultValue": "Windows",
             "allowedValues": [
                 "Windows",
                 "Linux"
@@ -80,13 +81,23 @@
             "metadata": {
                 "description": "Name prefix of the new storage account created to store the VM's disks"
             }
+        },
+        "sizeOfEachDataDiskInGB": {
+            "defaultValue": "200",
+            "type": "string",
+            "metadata": {
+                "description": "Size of the data disk in GB"
+            }
         }
     },
     "variables": {
         "fullVmName":"[concat('AZ-EA-IIB-DEV',parameters('vmNumber'))]",
         "vnetID": "[resourceId(parameters('virtualNetworkResourceGroupName'),concat('Microsoft.Network','/','virtualNetworks'),parameters('virtualNetworkName'))]",
         "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
-        "nicName": "[concat(variables('fullVmName'),'-NIC-01')]"
+        "nicName": "[concat(variables('fullVmName'),'-NIC-01')]",
+        "apiVersion": "2015-06-15",
+        "vmStorageAccountContainerName": "iib-data-dsk"
+
     },
     "resources": [
         {
@@ -123,6 +134,17 @@
                     "adminPassword": "[parameters('adminPassword')]"
                 },
                 "storageProfile": {
+                    "dataDisks": [
+                        {
+                            "name": "[concat(variables('fullVmName'), '-DSK-01')]",
+                            "diskSizeGB": "[parameters('sizeOfEachDataDiskInGB')]",
+                            "lun": 0,
+                            "vhd": {
+                                "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName')), variables('apiVersion')).primaryEndpoints.blob, variables('vmStorageAccountContainerName'),'/',variables('fullVmName'),'-DSK-01.vhd')]"
+                            },
+                            "createOption": "Empty"
+                        }
+                    ],
                     "osDisk": {
                         "name": "[concat(variables('fullVmName'),'-osDisk')]",
                         "osType": "[parameters('osType')]",
